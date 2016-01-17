@@ -9,6 +9,7 @@ Import MaxGui.FLTKMaxGui
 Import MaxGui.Drivers
 ?
 End Rem
+
 Import MaxGUI.Drivers
 Import MaxGUI.XPmanifest
 
@@ -83,6 +84,7 @@ ClearGadgetItems _tabber
 
 _textureslider=CreateSlider( 10,ClientHeight(_window)-30,80,24,_window,SLIDER_HORIZONTAL|SLIDER_TRACKBAR )
 _gadgets.AddLast _textureslider
+SetGadgetLayout _textureslider,1,0,0,1
 SetSliderRange _textureslider,0,0
 
 UpdateWindowMenu _window 
