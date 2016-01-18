@@ -43,6 +43,7 @@ Type TGlyphBlock
 	
 	Method Remove()
 	
+		_image.Lock(0,True,True).ClearPixels 0
 		_alloced=Null
 		_texels=Null
 		_image=Null

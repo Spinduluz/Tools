@@ -113,7 +113,7 @@ Type TBitmapFont
 				r=b.BlockAlloc( image.width,image.height,x,y )
 				If r<>-1
 				
-					bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(b._index,x,y,image.width,image.height,glyph.Advance()) )
+					bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(b._index,c,x,y,image.width,image.height,glyph) )
 					CopyImage b._image,image,x,y
 					Exit
 					
@@ -129,7 +129,7 @@ Type TBitmapFont
 				
 				block._index=bitmapfont._blocks.Count()
 				bitmapfont._blocks.AddLast block
-				bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(block._index,x,y,image.width,image.height,glyph.Advance()) )
+				bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(block._index,c,x,y,image.width,image.height,glyph) )
 									
 			EndIf
 	

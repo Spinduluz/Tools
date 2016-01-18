@@ -27,6 +27,7 @@ Include "TGlyphMetrics.bmx"
 Include "TGlyphBlock.bmx"
 Include "TBitmapFont.bmx"
 Include "TFontTab.bmx"
+Include "TCharRange.bmx"
 
 Const _fltkmaxgui:Int=False
 
@@ -36,9 +37,6 @@ Const MENU_FILE_SAVE:Int=1002
 Const MENU_FILE_SAVEAS:Int=1003
 Const MENU_FILE_CLOSETAB:Int=1004
 Const MENU_FILE_EXIT:Int=1005
-
-Global _fontsizes:String[]=["8","9","10","11","12","14","16","18","20","22","24","28","36","72","100"]
-Global _texsizes:String[]=["64","128","256","512","1024"]
 
 Const  _style:Int=WINDOW_CENTER|WINDOW_TITLEBAR|WINDOW_STATUS|WINDOW_MENU|WINDOW_CLIENTCOORDS|WINDOW_RESIZABLE
 Global _window:TGadget
