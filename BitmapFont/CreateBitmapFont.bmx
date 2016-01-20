@@ -46,20 +46,26 @@ Const MENU_EDIT_CUT%		=1020
 Const MENU_EDIT_COPY%		=1021
 Const MENU_EDIT_PASTE%		=1022
 
-Function AddTabItem( tabber:TTabber,Text:String,r:Int,g:Int,b:Int )
-
-	Local obj:TPanel=TPanel.Create( 0,0,tabber.GetClientWidth(),tabber.GetClientHeight(),tabber )
-	obj.SetColor r,g,b
-	tabber.AddTab obj,Text
-
-End Function
-
 Type TFontTab Extends TGadgetObject
+
+	Field _panel:TGadget
+	
+	Method Free()
+	
+		If _panel Then FreeGadget _panel
+		_panel=Null
+		
+		Super.Free
+	
+	End Method
 
 	Function Create:TFontTab( tabber:TTabber,Text:String )
 	
 		Local tab:TFontTab=New TFontTab
 		tab._object=CreateScrollPanel( 0,0,tabber.GetClientWidth(),tabber.GetClientHeight(),tabber._object )
+		tab._panel=ScrollPanelClient( TScrollPanel(tab._object) )
+		tab.SetLayout 1,1,1,1
+		
 		tabber.AddTab tab,Text
 		
 		Return tab
@@ -102,7 +108,7 @@ Type TFontWindow Extends TWindow
 	
 		Select tag
 		
-		Case 1000
+		Case MENU_FILE_NEW
 			Notify "New"
 			
 		Case MENU_FILE_EXIT
@@ -136,19 +142,14 @@ Type TFontWindow Extends TWindow
 		_tabber=CreateTabber( 0,0,GetClientWidth()-200,GetClientHeight(),Self )
 		_tabber.SetLayout 1,1,1,1
 		
-		Local tab:TFontTab=TFontTab.Create( _tabber,"Font 0" )
-		tab.SetColor 255,0,0
-		tab=TFontTab.Create( _tabber,"Font 1" )
-		tab.SetColor 0,255,0
-		tab=TFontTab.Create( _tabber,"Font 2" )
-		tab.SetColor 0,0,255
+		TFontTab.Create( _tabber,"Font 0" )
+		TFontTab.Create( _tabber,"Font 1" )
+		TFontTab.Create( _tabber,"Font 2" )
 		
 		Local x:Int=GetClientWidth()-200
 		_panel=CreatePanel( x,0,GetClientWidth()-x,GetClientHeight(),Self )
-		_panel.SetColor 255,0,0
 		_panel.SetLayout 0,1,1,1
 		
-		'_buttonExit=CreateButton( "&Exit",GetClientWidth()-((190+80)/2),GetClientHeight()-34,80,24,Self )
 		_buttonExit=CreateButton( "&Exit",(_panel.GetClientWidth()-80)/2,GetClientHeight()-34,80,24,_panel )
 		_buttonExit.SetLayout 0,1,0,0
 		

@@ -197,7 +197,7 @@ Type TGadgetObject
 		_childs.Clear
 		_childs=Null
 	
-		FreeGadget( _object )
+		If _object Then FreeGadget( _object )
 		_object=Null
 	
 	End Method
