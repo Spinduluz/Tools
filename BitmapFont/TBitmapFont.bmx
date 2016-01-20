@@ -68,10 +68,10 @@ Type TBitmapFont
 	
 	End Method
 	
-	Method Remove()
+	Method Free()
 	
 		For Local block:TGlyphBlock=EachIn _blocks
-			block.Remove
+			block.Free
 			block=Null
 		Next
 		_blocks.Clear
@@ -96,7 +96,7 @@ Type TBitmapFont
 								
 		For Local c:Int=start Until stop
 		
-			If c<=32 Continue 'Skip whitespaces
+			If c<=32 Then Continue 'Skip whitespaces
 	
 			Local x:Int,y:Int,r:Int,char:Int
 			

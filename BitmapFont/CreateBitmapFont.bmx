@@ -51,20 +51,20 @@ Type TFontTab Extends TGadgetObject
 	Field _panel:TGadget
 	
 	Method Free()
-	
-		If _panel Then FreeGadget _panel
-		_panel=Null
 		
 		Super.Free
+		
+		If _panel Then FreeGadget _panel
+		_panel=Null
 	
 	End Method
 
 	Function Create:TFontTab( tabber:TTabber,Text:String )
 	
 		Local tab:TFontTab=New TFontTab
-		tab._object=CreateScrollPanel( 0,0,tabber.GetClientWidth(),tabber.GetClientHeight(),tabber._object )
-		tab._panel=ScrollPanelClient( TScrollPanel(tab._object) )
-		tab.SetLayout 1,1,1,1
+		tab._panel=CreateScrollPanel( 0,0,tabber.GetClientWidth(),tabber.GetClientHeight(),tabber._object )
+		tab._object=ScrollPanelClient( TScrollPanel(tab._panel) )
+		SetGadgetLayout tab._panel,1,1,1,1
 		
 		tabber.AddTab tab,Text
 		
