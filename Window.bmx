@@ -166,6 +166,30 @@ Type TGadgetObject
 	
 	End Method
 	
+	Method SetSize( width:Int,height:Int )
+	
+		Local x:Int,y:Int
+		x=GadgetX( _object )
+		y=GadgetY( _object )
+		SetGadgetShape _object,x,y,width,height
+	
+	End Method
+	
+	Method SetPosition( x:Int,y:Int )
+	
+		Local width:Int,height:Int
+		width=GadgetWidth( _object )
+		height=GadgetHeight( _object )
+		SetGadgetShape _object,x,y,width,height
+	
+	End Method
+	
+	Method SetShape( x:Int,y:Int,width:Int,height:Int )
+	
+		SetGadgetShape( _object,x,y,width,height )
+	
+	End Method
+	
 	Method GetClientWidth:Int()
 	
 		Return ClientWidth( _object )
@@ -208,7 +232,7 @@ End Type
 ' TTab
 '
 
-Type TTab
+Type TTab Extends TGadgetObject
 End Type
 
 '

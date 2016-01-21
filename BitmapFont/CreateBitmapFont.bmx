@@ -50,6 +50,30 @@ Type TFontTab Extends TGadgetObject
 
 	Field _panel:TGadget
 	
+	Method SetSize( width:Int,height:Int )
+	
+		Local x:Int,y:Int
+		x=GadgetX( _panel )
+		y=GadgetY( _panel )
+		SetGadgetShape _panel,x,y,width,height
+	
+	End Method
+	
+	Method SetPosition( x:Int,y:Int )
+	
+		Local width:Int,height:Int
+		width=GadgetWidth( _panel)
+		height=GadgetHeight( _panel )
+		SetGadgetShape _panel,x,y,width,height
+	
+	End Method
+	
+	Method SetShape( x:Int,y:Int,width:Int,height:Int )
+	
+		SetGadgetShape( _panel,x,y,width,height )
+	
+	End Method
+	
 	Method Free()
 		
 		Super.Free
