@@ -34,6 +34,8 @@ DefData "Cu&t",MENU_EDIT_CUT,KEY_X,MODIFIER_COMMAND
 DefData "&Copy",MENU_EDIT_COPY,KEY_C,MODIFIER_COMMAND
 DefData "&Paste",MENU_EDIT_PASTE,KEY_P,MODIFIER_COMMAND
 
+Global fontSizeData:String[]=["8","9","10","11","12","14","16","18","20","22","24","26","28","36","72","144"]
+
 ' Menu items
 Const MENU_FILE_NEW%		=1000
 Const MENU_FILE_OPEN%		=1001
@@ -102,7 +104,14 @@ Type TFontWindow Extends TWindow
 
 	Field _tabber:TTabber
 	Field _panel:TPanel
+	
+	Field _fontBox:TTextField
+	Field _fontFile:String
+	
+	Field _sizeBox:TComboBox
+	
 	Field _buttonExit:TButton
+	Field _buttonBrowse:TButton
 	
 	Field _fileMenu:TMenu
 	Field _editMenu:TMenu
@@ -121,6 +130,10 @@ Type TFontWindow Extends TWindow
 		Case _buttonExit
 			_running=False
 			Return False
+			
+		Case _buttonBrowse
+			_fontFile:String=RequestFile( "Open font file","Font files:ttf,fon;All Files:*" )
+			If _fontFile<>"" Then _fontBox.SetText StripDir(_fontFile)
 		
 		End Select
 		
@@ -163,19 +176,19 @@ Type TFontWindow Extends TWindow
 
 	Method InitControls()
 	
-		_tabber=CreateTabber( 0,0,GetClientWidth()-200,GetClientHeight(),Self )
+		_tabber=CreateTabber( 0,0,GetClientWidth()-250,GetClientHeight(),Self )
 		_tabber.SetLayout 1,1,1,1
 		
 		TFontTab.Create( _tabber,"Font 0" )
 		TFontTab.Create( _tabber,"Font 1" )
 		TFontTab.Create( _tabber,"Font 2" )
 		
-		Local x:Int=GetClientWidth()-200
+		Local x:Int=GetClientWidth()-250
 		_panel=CreatePanel( x,0,GetClientWidth()-x,GetClientHeight(),Self )
 		_panel.SetLayout 0,1,1,1
 		
 		_buttonExit=CreateButton( "&Exit",(_panel.GetClientWidth()-80)/2,GetClientHeight()-34,80,24,_panel )
-		_buttonExit.SetLayout 0,1,0,0
+		_buttonExit.SetLayout 0,1,0,1
 		
 		_fileMenu=CreateMenu( "&File",0,Self,0,0 )
 		_editMenu=CreateMenu( "&Edit",0,Self,0,0 )
@@ -187,6 +200,17 @@ Type TFontWindow Extends TWindow
 		CreateMenuItems _editMenu
 		
 		UpdateMenu()
+		
+		Local tmpPanel:TPanel=CreatePanel( 5,5,_panel.GetClientWidth()-10,55,_panel,PANEL_GROUP,"Font file" )
+		tmpPanel.SetLayout 0,0,1,0
+		
+		_fontBox=CreateTextField( 5,5,tmpPanel.GetClientWidth()-35,24,tmpPanel )
+		_buttonBrowse=CreateButton( "...",tmpPanel.GetClientWidth()-30,5,25,24,tmpPanel )
+		
+		tmpPanel=CreatePanel( 5,60,_panel.GetClientWidth()-10,55,_panel,PANEL_GROUP,"Font style" )
+		tmpPanel.SetLayout 0,0,1,0
+		
+		_sizeBox=CreateComboBox( 5,5,tmpPanel.GetClientWidth()-10,24,tmpPanel,COMBOBOX_EDITABLE )
 	
 	End Method
 

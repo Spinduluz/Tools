@@ -190,6 +190,18 @@ Type TGadgetObject
 	
 	End Method
 	
+	Method GetText:String()
+	
+		Return GadgetText( _object )
+	
+	End Method
+	
+	Method SetText( Text:String )
+	
+		SetGadgetText _object,Text
+	
+	End Method
+	
 	Method GetClientWidth:Int()
 	
 		Return ClientWidth( _object )
@@ -397,6 +409,45 @@ Type TScrollablePanel Extends TGadgetObject
 
 End Type
 
+'
+' TTextField
+'
+Type TTextField Extends TGadgetObject
+
+	Function Create:TTextField( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Local textField:TTextField=New TTextField
+	
+		textField._object=CreateTextField( x,y,width,height,_GetGadget(group),style )
+		If Not textField._object Then Return Null
+		
+		If group Then group._childs.AddLast textField
+		
+		Return textField	
+	
+	End Function
+
+End Type
+
+'
+' TComboBox
+'
+Type TComboBox Extends TGadgetObject
+
+	Function Create:TComboBox( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Local comboBox:TComboBox=New TComboBox
+		
+		comboBox._object=CreateComboBox( x,y,width,height,_GetGadget(group),style )
+		If Not comboBox._object Then Return Null
+		
+		If group Then group._childs.AddLast comboBox
+		
+		Return comboBox
+	
+	End Function
+
+End Type
 
 '
 ' TWindow
@@ -426,6 +477,18 @@ Type TWindow Extends TGadgetObject
 	Method CreateButton:TButton( label:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject )
 	
 		Return TButton.Create( label,x,y,width,height,group )
+	
+	End Method
+	
+	Method CreateTextField:TTextField( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return TTextField.Create( x,y,width,height,group,style )
+	
+	End Method
+	
+	Method CreateComboBox:TComboBox( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return TComboBox.Create( x,y,width,height,group,style )
 	
 	End Method
 	
