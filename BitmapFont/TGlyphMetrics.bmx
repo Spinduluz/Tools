@@ -26,7 +26,7 @@ Type TGlyphMetrics
 		metrics._advance=glyph.Advance()
 		
 		glyph.GetRect( metrics._glyph_x,metrics._glyph_y,metrics._glyph_w,metrics._glyph_h )
-		DebugLog metrics._glyph_x+" "+metrics._glyph_y+" "+metrics._glyph_w+" "+metrics._glyph_h+" ["+Chr(char)+"]"
+		'DebugLog metrics._glyph_x+" "+metrics._glyph_y+" "+metrics._glyph_w+" "+metrics._glyph_h+" ["+Chr(char)+"]"
 		
 		Return metrics
 	

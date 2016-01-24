@@ -81,7 +81,7 @@ Type TBitmapFont
 	
 	End Method
 	
-	Function Create:TBitmapFont( font:TImageFont,start:Int,stop:Int,texw:Int,texh:Int )
+	Function Create:TBitmapFont( font:TImageFont,range:TList,texw:Int,texh:Int )
 	
 		Local bitmapfont:TBitmapFont=New TBitmapFont
 		Local glyph:TImageGlyph
@@ -93,46 +93,51 @@ Type TBitmapFont
 		
 		block._index=bitmapfont._blocks.Count()
 		bitmapfont._blocks.AddLast block
-								
-		For Local c:Int=start Until stop
 		
-			If c<=32 Then Continue 'Skip whitespaces
-	
-			Local x:Int,y:Int,r:Int,char:Int
-			
-			char=font.CharToGlyph( c )
-			If char=-1 Continue
-
-			glyph=font.LoadGlyph( char )
-			image=ConvertGlyph( glyph )
-			
-			If Not image Continue
-	
-			For Local b:TGlyphBlock=EachIn bitmapfont._blocks
-			
-				r=b.BlockAlloc( image.width,image.height,x,y )
-				If r<>-1
-				
-					bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(b._index,c,x,y,image.width,image.height,glyph) )
-					CopyImage b._image,image,x,y
-					Exit
-					
-				EndIf
+		For Local r:TCharRange=EachIn range	
 						
-			Next
+			For Local c:Int=r._start Until r._stop
 			
-			If r=-1
-			
-				block=TGlyphBlock.Create( texw,texh )
-				block.BlockAlloc( image.width,image.height,x,y )
-				CopyImage block._image,image,x,y
+				If c<=32 Then Continue 'Skip whitespaces
+		
+				Local x:Int,y:Int,r:Int,char:Int
 				
-				block._index=bitmapfont._blocks.Count()
-				bitmapfont._blocks.AddLast block
-				bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(block._index,c,x,y,image.width,image.height,glyph) )
-									
-			EndIf
+				char=font.CharToGlyph( c )
+				If char=-1 Continue
 	
+				glyph=font.LoadGlyph( char )
+				If Not glyph.Pixels() Then Continue
+				
+				image=ConvertGlyph( glyph )
+				If Not image Then Continue
+		
+				For Local b:TGlyphBlock=EachIn bitmapfont._blocks
+				
+					r=b.BlockAlloc( image.width,image.height,x,y )
+					If r<>-1
+					
+						bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(b._index,c,x,y,image.width,image.height,glyph) )
+						CopyImage b._image,image,x,y
+						Exit
+						
+					EndIf
+							
+				Next
+				
+				If r=-1
+				
+					block=TGlyphBlock.Create( texw,texh )
+					block.BlockAlloc( image.width,image.height,x,y )
+					CopyImage block._image,image,x,y
+					
+					block._index=bitmapfont._blocks.Count()
+					bitmapfont._blocks.AddLast block
+					bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(block._index,c,x,y,image.width,image.height,glyph) )
+										
+				EndIf
+		
+			Next
+		
 		Next
 		
 		Return bitmapfont		

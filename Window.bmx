@@ -1,6 +1,10 @@
 SuperStrict
 
+'?Win32
+'Import MaxGUI.FLTKMaxGUI
+'?Not Win32
 Import MaxGUI.Drivers
+'?
 Import MaxGUI.ProxyGadgets
 
 Private
@@ -152,10 +156,28 @@ Type TGadgetObject
 	
 	End Method
 	
+	Method SelectedItem:Int()
+	
+		Return SelectedGadgetItem( _object )
+	
+	End Method
+	
+	Method RemoveItem( index:Int )
+	
+		RemoveGadgetItem _object,index
+	
+	End Method
+	
 	Method GetItemCount:Int()
 	
 		If Not _object Then Return -1
 		Return CountGadgetItems( _object )
+	
+	End Method
+	
+	Method GetItemExtra:Object( index:Int )
+	
+		Return GadgetItemExtra( _object,index )
 	
 	End Method
 	
@@ -202,6 +224,12 @@ Type TGadgetObject
 	
 	End Method
 	
+	Method SetPixmap( pixmap:TPixmap,flags:Int=GADGETPIXMAP_ICON )
+	
+		SetGadgetPixmap _object,pixmap,flags
+	
+	End Method
+	
 	Method GetClientWidth:Int()
 	
 		Return ClientWidth( _object )
@@ -235,6 +263,16 @@ Type TGadgetObject
 	
 		If _object Then FreeGadget( _object )
 		_object=Null
+	
+	End Method
+	
+	Method _Init:Int( obj:TGadget,group:TGadgetObject )
+	
+		If Not obj Then Return False
+		_object=obj
+		If group Then group._childs.AddLast Self
+		
+		Return True
 	
 	End Method
 
@@ -296,23 +334,26 @@ Type TTabber Extends TGadgetObject
 	
 		Local count:Int=GetTabCount()
 		If count<=0 Then Return
-		If index<=0 And index>=count Then Return
+		If index<0 And index>=count Then Return
 		
 		_currentTab.Hide
 		_currentTab=GetTab( index )
 		_currentTab.Show
 	
 	End Method
+	
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject )
+	
+		Local ret:Int=_Init( CreateTabber( x,y,width,height,_GetGadget(group) ),group )
+		If ret Then ClearItems
+		Return ret
+	
+	End Method
 
 	Function Create:TTabber( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject )
 	
 		Local tabber:TTabber=New TTabber
-	
-		tabber._object=CreateTabber( x,y,width,height,_GetGadget(group) )
-		tabber.ClearItems
-		
-		If Not tabber._object Then Return Null
-		If group Then group._childs.AddLast tabber
+		If Not tabber.InitControl( x,y,width,height,group ) Then Return Null	
 	
 		Return tabber
 	
@@ -325,13 +366,16 @@ End Type
 '
 Type TPanel Extends TGadgetObject
 
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0,title:String="" )
+	
+		Return _Init( CreatePanel( x,y,width,height,_GetGadget(group),style,title ),group )
+			
+	End Method
+
 	Function Create:TPanel( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0,title:String="" )
 	
 		Local panel:TPanel=New TPanel
-		
-		panel._object=CreatePanel( x,y,width,height,_GetGadget(group),style,title )
-		If Not panel._object Then Return Null
-		If group Then group._childs.AddLast panel
+		If Not panel.InitControl( x,y,width,height,group,style,title ) Then Return Null
 		
 		Return panel
 	
@@ -345,11 +389,30 @@ End Type
 Type TMenu Extends TGadgetObject
 
 	Field _tag:Int
+	
+	Method InitControl:Int( label:String,tag:Int,parent:TGadgetObject,hotkey:Int,modifier:Int )
+	
+		Local par:TGadget=Null
+		If parent And parent.GetClass()=GADGET_WINDOW Then
+			par=WindowMenu( _GetGadget(parent) ) 
+		Else
+			par=_GetGadget( parent )
+		End If
+		
+		_object=CreateMenu( label,tag,par,hotkey,modifier )
+		If Not _object Then Return False
+		
+		_tag=tag
+		If parent Then parent._childs.AddLast Self
+		
+		Return True
+	
+	End Method
 
 	Function Create:TMenu( label:String,tag:Int,parent:TGadgetObject,hotkey:Int,modifier:Int )
 	
 		Local menu:TMenu=New TMenu
-		
+		Rem
 		Local par:TGadget=Null
 		If parent And parent.GetClass()=GADGET_WINDOW Then
 			par=WindowMenu( _GetGadget(parent) ) 
@@ -362,6 +425,8 @@ Type TMenu Extends TGadgetObject
 		
 		menu._tag=tag
 		If parent Then parent._childs.AddLast menu
+		End Rem
+		If Not menu.InitControl( label,tag,parent,hotkey,modifier ) Then Return Null
 		
 		Return menu
 	
@@ -373,16 +438,30 @@ End Type
 ' TButton
 '
 Type TButton Extends TGadgetObject
+
+	Method GetState:Int()
+	
+		Return ButtonState( _object )
+	
+	End Method
+	
+	Method InitControl:Int( label:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=BUTTON_PUSH )
+	
+		Return _Init( CreateButton( label,x,y,width,height,_GetGadget(group),style ),group )
+	
+	End Method
 		
-	Function Create:TButton( label:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject )
+	Function Create:TButton( label:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=BUTTON_PUSH )
 	
 		Local button:TButton=New TButton
-		
-		button._object=CreateButton( label,x,y,width,height,_GetGadget(group) )
+Rem
+		button._object=CreateButton( label,x,y,width,height,_GetGadget(group),style )
 		If Not button._object Then Return Null
 
 		If group Then group._childs.AddLast button
-		
+End Rem
+		If Not button.InitControl( label,x,y,width,height,group,style ) Then Return Null
+	
 		Return button
 	
 	End Function
@@ -394,15 +473,23 @@ End Type
 '
 Type TScrollablePanel Extends TGadgetObject
 	
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,flags:Int=0 )
+	
+		Return _Init( CreateScrollPanel( x,y,width,height,_GetGadget(group),flags ),group  )
+	
+	End Method
+	
 	Function Create:TScrollablePanel( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,flags:Int=0 )
 	
 		Local panel:TScrollablePanel=New TScrollablePanel
-		
+Rem	
 		panel._object=CreateScrollPanel( x,y,width,height,_GetGadget(group),flags )
 		If Not panel._object Then Return Null
 		
 		If group Then group._childs.AddLast panel
-		
+End Rem
+		If Not panel.InitControl( x,y,width,height,group,flags ) Return Null
+	
 		Return panel
 	
 	End Function	
@@ -414,15 +501,23 @@ End Type
 '
 Type TTextField Extends TGadgetObject
 
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return _Init( CreateTextField( x,y,width,height,_GetGadget(group),style ),group )
+	
+	End Method
+
 	Function Create:TTextField( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
 	
 		Local textField:TTextField=New TTextField
-	
+Rem
 		textField._object=CreateTextField( x,y,width,height,_GetGadget(group),style )
 		If Not textField._object Then Return Null
 		
 		If group Then group._childs.AddLast textField
-		
+End Rem
+		If Not textField.InitControl( x,y,width,height,group,style ) Then Return Null
+	
 		Return textField	
 	
 	End Function
@@ -434,20 +529,125 @@ End Type
 '
 Type TComboBox Extends TGadgetObject
 
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return _Init( CreateComboBox( x,y,width,height,_GetGadget(group),style ),group )
+	
+	End Method
+
 	Function Create:TComboBox( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
 	
 		Local comboBox:TComboBox=New TComboBox
-		
+Rem		
 		comboBox._object=CreateComboBox( x,y,width,height,_GetGadget(group),style )
 		If Not comboBox._object Then Return Null
 		
 		If group Then group._childs.AddLast comboBox
+End Rem
+		If Not comboBox.InitControl( x,y,width,height,group,style ) Then Return Null
 		
 		Return comboBox
 	
 	End Function
 
 End Type
+
+'
+' TLabel
+'
+Type TLabel Extends TGadgetObject
+
+	Method InitControl:Int( name:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=LABEL_LEFT )
+	
+		Return _Init( CreateLabel( name,x,y,width,height,_GetGadget(group),style ),group )
+	
+	End Method
+
+	Function Create:TLabel( name:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=LABEL_LEFT )
+	
+		Local label:TLabel=New TLabel
+Rem	
+		label._object=CreateLabel( name,x,y,width,height,_GetGadget(group),style )
+		If Not label._object Then Return Null
+		
+		If group Then group._childs.AddLast label
+End Rem
+		If Not label.InitControl( name,x,y,width,height,group,style ) Then Return Null
+	
+		Return label
+	
+	End Function
+
+End Type
+
+'
+' TListBox
+'
+Type TListBox Extends TGadgetObject
+
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return _Init( CreateListBox( x,y,width,height,_GetGadget(group),style ),group )
+	
+	End Method
+
+	Function Create:TListBox( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Local listBox:TListBox=New TListBox
+Rem		
+		listBox._object=CreateListBox( x,y,width,height,_GetGadget(group),style )
+		If Not listBox._object Then Return Null
+		
+		If group Then group._childs.AddLast listBox
+End Rem
+		If Not listBox.InitControl( x,y,width,height,group,style ) Then Return Null
+	
+		Return listBox
+	
+	End Function
+
+End Type
+
+'
+' TSlider
+'
+Type TSlider Extends TGadgetObject
+
+	Method SetRange( start:Int,stop:Int )
+	
+		SetSliderRange _object,start,stop
+	
+	End Method
+	
+	Method SetValue( value:Int )
+	
+		SetSliderValue _object,value
+	
+	End Method
+	
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return _Init( CreateSlider( x,y,width,height,_GetGadget(group),style ),group )
+	
+	End Method
+
+	Function Create:TSlider( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Local slider:TSlider=New TSlider
+Rem	
+		slider._object=CreateSlider( x,y,width,height,_GetGadget(group),style )
+		If Not slider._object Then Return Null
+	
+		If group Then group._childs.AddLast slider
+End Rem
+		If Not slider.InitControl( x,y,width,height,group,style ) Then Return Null
+	
+		Return slider
+	
+	End Function
+
+End Type
+
 
 '
 ' TWindow
@@ -474,9 +674,9 @@ Type TWindow Extends TGadgetObject
 	
 	End Method
 
-	Method CreateButton:TButton( label:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject )
+	Method CreateButton:TButton( label:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=BUTTON_PUSH )
 	
-		Return TButton.Create( label,x,y,width,height,group )
+		Return TButton.Create( label,x,y,width,height,group,style )
 	
 	End Method
 	
@@ -492,9 +692,39 @@ Type TWindow Extends TGadgetObject
 	
 	End Method
 	
+	Method CreateLabel:TLabel( name:String,x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=LABEL_LEFT )
+	
+		Return TLabel.Create( name,x,y,width,height,group,style )
+	
+	End Method
+	
+	Method CreateListBox:TListBox( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return TListBox.Create( x,y,width,height,group,style )
+	
+	End Method
+	
+	Method CreateSlider:TSlider( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Return TSlider.Create( x,y,width,height,group,style )
+	
+	End Method
+	
 	Method SetActive( active:Int )
 	
 		_active=active
+	
+	End Method
+	
+	Method SetMinSize( width:Int,height:Int )
+	
+		SetMinWindowSize _object,width,height
+	
+	End Method
+	
+	Method SetMaxSize( width:Int,height:Int )
+	
+		SetMaxWindowSize _object,width,height
 	
 	End Method
 	
