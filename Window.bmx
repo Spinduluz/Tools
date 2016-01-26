@@ -342,18 +342,18 @@ Type TTabber Extends TGadgetObject
 	
 	End Method
 	
-	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject )
+	Method InitControl:Int( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
 	
-		Local ret:Int=_Init( CreateTabber( x,y,width,height,_GetGadget(group) ),group )
+		Local ret:Int=_Init( CreateTabber( x,y,width,height,_GetGadget(group),style ),group )
 		If ret Then ClearItems
 		Return ret
 	
 	End Method
 
-	Function Create:TTabber( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject )
+	Function Create:TTabber( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
 	
 		Local tabber:TTabber=New TTabber
-		If Not tabber.InitControl( x,y,width,height,group ) Then Return Null	
+		If Not tabber.InitControl( x,y,width,height,group,style ) Then Return Null	
 	
 		Return tabber
 	
@@ -442,6 +442,12 @@ Type TButton Extends TGadgetObject
 	Method GetState:Int()
 	
 		Return ButtonState( _object )
+	
+	End Method
+	
+	Method SetState( state:Int )
+	
+		SetButtonState( _object,state )
 	
 	End Method
 	

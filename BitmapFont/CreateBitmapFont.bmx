@@ -18,14 +18,11 @@ Import "../Window.bmx"
 Global _shell32:Int=LoadLibraryA( "shell32.dll" )
 Global _ole32:Int=LoadLibraryA( "ole32.dll" )
 
-Global SHGetKnownFolderPath:Int( refid:Byte Ptr,flags:Int,token:Byte Ptr,path:Short Ptr Var ) "Win32"
-Global CoTaskMemFree( mem:Byte Ptr ) "Win32"
+Global SHGetKnownFolderPath:Int( refid:Byte Ptr,flags:Int,token:Byte Ptr,path:Short Ptr Var ) "Win32"=Null
+Global CoTaskMemFree( mem:Byte Ptr ) "Win32"=Null
 
-SHGetKnownFolderPath=GetProcAddress( _shell32,"SHGetKnownFolderPath" )
-CoTaskMemFree=GetProcAddress( _ole32,"CoTaskMemFree" )
-
-Const SYSTEMFOLDER_DOCUMENTS:Int=1
-Const SYSTEMFOLDER_GAMES:Int=2
+If _shell32 Then SHGetKnownFolderPath=GetProcAddress( _shell32,"SHGetKnownFolderPath" )
+If _ole32 Then CoTaskMemFree=GetProcAddress( _ole32,"CoTaskMemFree" )
 
 Function GetDocumentsFolder:String()
 
@@ -125,7 +122,7 @@ DefData "&Copy",MENU_EDIT_COPY,KEY_C,MODIFIER_COMMAND
 DefData "&Paste",MENU_EDIT_PASTE,KEY_P,MODIFIER_COMMAND
 
 Global _fontSizeData:String[]=["8","9","10","11","12","14","16","18","20","22","24","26","28","36","72","144"]
-Global _textureSizeData:String[]=["64","128","256","512","1024","2048","4096"]
+Global _textureSizeData:String[]=["64","128","256","512","1024","2048","4096","8192"]
 
 Const _style:Int=WINDOW_CENTER|WINDOW_TITLEBAR|WINDOW_STATUS|WINDOW_MENU|WINDOW_CLIENTCOORDS|WINDOW_RESIZABLE
 
@@ -142,6 +139,9 @@ Const MENU_EDIT_CUT%		=1020
 Const MENU_EDIT_COPY%		=1021
 Const MENU_EDIT_PASTE%		=1022
 
+'
+' TFontTab
+'
 Type TFontTab Extends TGadgetObject
 
 	Field _panel:TGadget
@@ -218,6 +218,9 @@ Type TFontTab Extends TGadgetObject
 
 End Type
 
+'
+' TFontPanel
+'
 Type TFontPanel Extends TPanel
 
 	Function Create:TFontPanel( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0,title:String="" )
@@ -231,9 +234,37 @@ Type TFontPanel Extends TPanel
 
 End Type
 
+'
+' TFontTabber
+'
+Type TFontTabber Extends TTabber
+
+	Method GetTab:TFontTab( index:Int )
+	
+		Return TFontTab( Super.GetTab(index) )
+	
+	End Method
+	
+	Method GetCurrentTab:TFontTab()
+	
+		Return GetTab( SelectedItem() )
+	
+	End Method
+
+	Function Create:TFontTabber( x:Int,y:Int,width:Int,height:Int,group:TGadgetObject,style:Int=0 )
+	
+		Local tabber:TFontTabber=New TFontTabber
+		If Not tabber.InitControl( x,y,width,height,group,style ) Then Return Null
+		
+		Return tabber
+	
+	End Function
+
+End Type
+
 Type TFontWindow Extends TWindow
 
-	Field _tabber:TTabber
+	Field _tabber:TFontTabber
 	Field _panel:TPanel
 	
 	Field _fontBox:TTextField
@@ -299,6 +330,18 @@ Type TFontWindow Extends TWindow
 		
 		range.Clear
 		range=Null
+		
+		'Clear settings
+		'
+		_fontBox.SetText ""
+		_fromCharacter.SetText ""
+		_toCharacter.SetText ""
+		_rangeBox.ClearItems
+		_widthBox.SelectItem 2
+		_heightBox.SelectItem 2
+		_sizeBox.SelectItem 0
+		_buttonBold.SetState 0
+		_buttonItalic.SetState 0
 	
 	End Method
 	
@@ -306,6 +349,39 @@ Type TFontWindow Extends TWindow
 	
 		_running=False
 		Return Super.OnClose()
+	
+	End Method
+	
+	Method AddRange()
+	
+		If _fromCharacter.GetText()<>"" And _toCharacter.GetText()<>"" Then
+		
+			Local fromChar:Int=_fromCharacter.GetText().ToInt()
+			Local toChar:Int=_toCharacter.GetText().ToInt()
+			
+			If fromChar<toChar Then
+			
+				Local rangeString:String=fromChar+":"+toChar+" ['"+Chr(fromChar)+"']-['"+Chr(toChar)+"']"
+				_rangeBox.AddItem rangeString,0,-1,"",TCharRange.Create(fromChar,toChar)
+									
+			End If
+			
+		End If
+	
+	End Method
+		
+	Method OnTabEvent()
+	
+		_selectBitmap.SetRange( 0,TFontTab(_tabber.GetTab(EventData())).GetBitmapCount()-1 )
+		_selectBitmap.SetValue( 0 )
+		_tabber.GetTab( EventData() ).SetBitmap 0
+	
+	End Method
+	
+	Method OnSelectBitmap()
+	
+		_tabber.GetCurrentTab().SetBitmap EventData()
+		_bitmapLabel.SetText "Current bitmap: "+EventData()
 	
 	End Method
 
@@ -318,34 +394,23 @@ Type TFontWindow Extends TWindow
 			Return False
 			
 		Case _buttonBrowse
-			_fontFile:String=RequestFile( "Open font file","Font files:ttf,fon;All Files:*" )
+			_fontFile=RequestFile( "Open font file","Font files:ttf,fon;All Files:*" )
 			If _fontFile<>"" Then _fontBox.SetText StripDir(_fontFile)
 			
 		Case _buttonCreate
 			CreateBitmapFont
 			
-		Case _buttonAddRange 'FIXME
-			If _fromCharacter.GetText()<>"" And _toCharacter.GetText()<>"" Then
-				Local fromChar:Int=_fromCharacter.GetText().ToInt()
-				Local toChar:Int=_toCharacter.GetText().ToInt()
-				
-				If fromChar<toChar Then
-					Local rangeString:String=fromChar+":"+toChar+" ['"+Chr(fromChar)+"']-['"+Chr(toChar)+"']"
-					_rangeBox.AddItem rangeString,0,-1,"",TCharRange.Create(fromChar,toChar)					
-				End If
-			End If
+		Case _buttonAddRange
+			AddRange
 		
 		Case _buttonRemoveRange
 			If _rangeBox.SelectedItem()>-1 Then _rangeBox.RemoveItem _rangeBox.SelectedItem()
 			
 		Case _tabber
-			_selectBitmap.SetRange( 0,TFontTab(_tabber.GetTab(EventData())).GetBitmapCount()-1 )
-			_selectBitmap.SetValue( 0 )
-			TFontTab( _tabber.GetTab(EventData()) ).SetBitmap 0
+			OnTabEvent
 			
 		Case _selectBitmap
-			TFontTab( _tabber.GetTab(_tabber.SelectedItem()) ).SetBitmap EventData()
-			_bitmapLabel.SetText "Current bitmap: "+EventData()
+			OnSelectBitmap
 
 		End Select
 		
@@ -391,12 +456,13 @@ Type TFontWindow Extends TWindow
 		' FIXME:
 		' Clean this up and make it easier to change layout
 		' I tried to keep this somewhat clean but failed
+		' I might do separate controls for each panel
 		
 		Local x:Int,y:Int,w:Int,h:Int
 	
 		' Create tabber
 		'
-		_tabber=CreateTabber( 0,0,GetClientWidth()-250,GetClientHeight(),Self )
+		_tabber=TFontTabber.Create( 0,0,GetClientWidth()-250,GetClientHeight(),Self )'CreateTabber( 0,0,GetClientWidth()-250,GetClientHeight(),Self )
 		_tabber.SetLayout 1,1,1,1
 		
 		' Create menu
@@ -428,20 +494,28 @@ Type TFontWindow Extends TWindow
 		Local tmpPanel:TPanel=CreatePanel( 5,5,_panel.GetClientWidth()-10,410,_panel,PANEL_GROUP,"Font file" )
 		tmpPanel.SetLayout 0,0,1,0
 		
+		' Font selector
+		'
 		x=5 ; y=5 ; w=tmpPanel.GetClientWidth()-35 ; h=24		
 		_fontBox=CreateTextField( x,y,w,h,tmpPanel )
 		_buttonBrowse=CreateButton( "...",tmpPanel.GetClientWidth()-30,5,25,24,tmpPanel )
 		
+		' Font style checkboxes
+		'
 		x=tmpPanel.GetClientWidth()-75 ; y=35 ; w=50 ; h=24
 		_buttonBold=CreateButton( "Bold",x,y,w,h,tmpPanel,BUTTON_CHECKBOX )
 		_buttonItalic=CreateButton( "Italic",x,55,50,24,tmpPanel,BUTTON_CHECKBOX )
 
+		' Font sizes
+		'
 		_sizeBox=CreateComboBox( 5,35,tmpPanel.GetClientWidth()/4,24,tmpPanel,COMBOBOX_EDITABLE )
 		For Local s:String=EachIn _fontSizeData
 			_sizeBox.AddItem s
 		Next
 		_sizeBox.SelectItem 0
 		
+		' Create button
+		'
 		_buttonCreate=CreateButton( "&Create",5,tmpPanel.GetClientHeight()-29,90,24,tmpPanel )
 		
 		Local sizePanel:TPanel=CreatePanel( 5,80,tmpPanel.GetClientWidth()-10,55,tmpPanel,PANEL_GROUP,"Texture size" )

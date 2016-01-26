@@ -13,30 +13,41 @@ Type TGlyphBlock
 		Local best:Int,best2:Int,i:Int,j:Int
 		
 		For Local n:Int=0 Until 1
+		
 			best=_height
 		
 			For i:Int=0 Until _width-width
+			
 				best2=0
 				
 				For j=0 Until width
-					If _alloced[n,i+j]>=best Exit
-					If _alloced[n,i+j]>best2 best2=_alloced[n,i+j]
+				
+					If _alloced[n,i+j]>=best Then Exit
+					If _alloced[n,i+j]>best2 Then best2=_alloced[n,i+j]
+					
 				Next
+				
 				If j=width
+				
 					x=i;
 					y=best2
 					best=best2
+					
 				End If
+				
 			Next
 			
-			If best+height>_height Continue
+			If best+height>_height Then Continue
 			
 			For i:Int=0 Until width
+			
 				_alloced[n,x+i]=best+height
+				
 			Next
 			
 			Return n		
 		Next
+		
 		Return -1	
 		
 	End Method

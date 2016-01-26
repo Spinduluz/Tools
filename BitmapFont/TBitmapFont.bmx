@@ -71,9 +71,12 @@ Type TBitmapFont
 	Method Free()
 	
 		For Local block:TGlyphBlock=EachIn _blocks
+		
 			block.Free
 			block=Null
+			
 		Next
+		
 		_blocks.Clear
 		_glyphs.Clear
 		_blocks=Null
@@ -81,12 +84,28 @@ Type TBitmapFont
 	
 	End Method
 	
+	Method Save( name:String,path:String )
+	
+		If name="" Then Return
+		
+		For Local block:TGlyphBlock=EachIn _blocks	
+		
+			Local pixmap:TPixmap=block._image.Lock( 0,True,True )
+			SavePixmapPNG( pixmap,path+"/"+name+"_"+block._index+".png",9 )
+			
+		Next
+	
+	End Method
+	
 	Function Create:TBitmapFont( font:TImageFont,range:TList,texw:Int,texh:Int )
+	
+		If Not font Then Return Null
 	
 		Local bitmapfont:TBitmapFont=New TBitmapFont
 		Local glyph:TImageGlyph
 		Local image:TImage
 		Local block:TGlyphBlock=TGlyphBlock.Create( texw,texh )
+		Local char:Int
 		
 		bitmapfont._glyphs=New TList
 		bitmapfont._blocks=New TList
@@ -94,16 +113,22 @@ Type TBitmapFont
 		block._index=bitmapfont._blocks.Count()
 		bitmapfont._blocks.AddLast block
 		
+		'Always add space if only for metrics
+		'		
+		char=font.CharToGlyph( 32 )
+		glyph=font.LoadGlyph( char )
+		bitmapFont._glyphs.AddLast( TGlyphMetrics.Create(-1,32,0,0,-1,-1,glyph) )	
+		
 		For Local r:TCharRange=EachIn range	
 						
 			For Local c:Int=r._start Until r._stop
 			
 				If c<=32 Then Continue 'Skip whitespaces
 		
-				Local x:Int,y:Int,r:Int,char:Int
+				Local x:Int,y:Int,r:Int
 				
 				char=font.CharToGlyph( c )
-				If char=-1 Continue
+				If char=-1 Then Continue
 	
 				glyph=font.LoadGlyph( char )
 				If Not glyph.Pixels() Then Continue
@@ -113,7 +138,7 @@ Type TBitmapFont
 		
 				For Local b:TGlyphBlock=EachIn bitmapfont._blocks
 				
-					r=b.BlockAlloc( image.width,image.height,x,y )
+					r=b.BlockAlloc( image.width,image.height,x,y )					
 					If r<>-1
 					
 						bitmapfont._glyphs.AddLast( TGlyphMetrics.Create(b._index,c,x,y,image.width,image.height,glyph) )
