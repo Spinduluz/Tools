@@ -309,8 +309,14 @@ Type TTabber Extends TGadgetObject
 	
 	Method GetTab:TGadgetObject( index:Int )
 	
-		If index<0 And index>=GetTabCount() Then Return Null
+		If index<0 Or index>=GetTabCount() Then Return Null
 		Return TGadgetObject( _tabs.ValueAtIndex(index) )
+	
+	End Method
+	
+	Method GetCurrentTab:TGadgetObject()
+	
+		Return GetTab( SelectedItem() )
 	
 	End Method
 	
@@ -339,6 +345,21 @@ Type TTabber Extends TGadgetObject
 		_currentTab.Hide
 		_currentTab=GetTab( index )
 		_currentTab.Show
+	
+	End Method
+	
+	Method RemoveCurrentTab()
+	
+		Local index:Int=SelectedItem()
+		If index=-1 Then Return
+		
+		Local tab:TGadgetObject=GetCurrentTab()
+		RemoveItem index
+		_tabs.Remove tab
+		
+		If _currentTab=tab Then _currentTab=Null
+		
+		tab.Free
 	
 	End Method
 	

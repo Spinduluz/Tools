@@ -86,14 +86,46 @@ Type TBitmapFont
 	
 	Method Save( name:String,path:String )
 	
+		Local fullpath:String=""
+	
 		If name="" Then Return
 		
 		For Local block:TGlyphBlock=EachIn _blocks	
 		
 			Local pixmap:TPixmap=block._image.Lock( 0,True,True )
-			SavePixmapPNG( pixmap,path+"/"+name+"_"+block._index+".png",9 )
+			
+			fullpath=""
+			If path<>"" Then
+				fullpath=path+"/"
+			End If
+			fullpath:+name+"_"+block._index+".png"
+			
+			SavePixmapPNG( pixmap,fullpath,9 )
 			
 		Next
+		
+		fullpath=""
+		If path<>"" Then
+			fullpath=path+"/"
+		End If
+		fullpath:+name+".dat"
+		
+		Local stream:TStream=WriteStream( fullpath )
+		
+		Local sid:String="FONT"
+		Local id:Byte Ptr=sid.ToCString()
+		stream.Write id,4
+		MemFree id
+		
+		stream.WriteInt _glyphs.Count()
+		
+		For Local g:TGlyphMetrics=EachIn _glyphs
+		
+			g.Write stream
+		
+		Next
+		
+		CloseStream( stream )	
 	
 	End Method
 	

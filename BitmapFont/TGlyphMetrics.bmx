@@ -14,6 +14,25 @@ Type TGlyphMetrics
 	Field _glyph_w:Int
 	Field _glyph_h:Int
 	
+	Method Write( stream:TStream )
+	
+		If Not stream Then Return
+		
+		stream.WriteInt _index
+		stream.WriteInt _char
+		stream.WriteInt _x
+		stream.WriteInt _y
+		stream.WriteInt _width
+		stream.WriteInt _height
+		stream.WriteFloat _advance
+		
+		stream.WriteInt _glyph_x
+		stream.WriteInt _glyph_y
+		stream.WriteInt _glyph_w
+		stream.WriteInt _glyph_h
+	
+	End Method
+	
 	Function Create:TGlyphMetrics( index:Int,char:Int,x:Int,y:Int,width:Int,height:Int,glyph:TImageGlyph )
 	
 		Local metrics:TGlyphMetrics=New TGlyphMetrics

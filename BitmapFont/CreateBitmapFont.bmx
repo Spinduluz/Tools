@@ -26,6 +26,8 @@ If _ole32 Then CoTaskMemFree=GetProcAddress( _ole32,"CoTaskMemFree" )
 
 Function GetDocumentsFolder:String()
 
+	If Not CoTaskMemFree And Not SHGetKnownFolderPath Then getenv_( "APPDATA" )
+
 	Const FOLDERID_Documents$="{FDD39AD0-238F-46AF-ADB4-6C85480369C7}"
 	Global IID_FOLDERID_Documents:GUID=New GUID
 	Global documentFolder:String=""
@@ -57,6 +59,8 @@ Function GetDocumentsFolder:String()
 End Function
 
 Function GetSaveGamesFolder:String()
+
+	If Not CoTaskMemFree And Not SHGetKnownFolderPath Then getenv_( "APPDATA" )
 
 	Const FOLDERID_Games$="{4C5C32FF-BB9D-43b0-B5B4-2D72E54EAAA4}"
 	Global IID_FOLDERID_Games:GUID=New GUID
@@ -93,9 +97,6 @@ DebugLog GetSaveGamesFolder()
 
 '--------------------------------------------------------------------------------
 
-Local test:String="sdhfskjdh"
-DebugLog test.ToInt()
-
 Private
 
 Include "TGlyphBlock.bmx"
@@ -106,12 +107,14 @@ Include "TCharRange.bmx"
 Global _running:Int=True
 
 #FileMenuData
-DefData 7
+DefData 9
 DefData "&New",MENU_FILE_NEW,KEY_N,MODIFIER_COMMAND
 DefData "",0,0,0
 DefData "&Open",MENU_FILE_OPEN,KEY_O,MODIFIER_COMMAND
 DefData "&Save",MENU_FILE_SAVE,KEY_S,MODIFIER_COMMAND
 DefData "Save &As",MENU_FILE_SAVEAS,KEY_S,MODIFIER_COMMAND|MODIFIER_ALT
+DefData "",0,0,0
+DefData "&Close tab",MENU_FILE_CLOSETAB,KEY_W,MODIFIER_COMMAND
 DefData "",0,0,0
 DefData "E&xit",MENU_FILE_EXIT,KEY_F4,MODIFIER_ALT
 
@@ -146,6 +149,7 @@ Type TFontTab Extends TGadgetObject
 
 	Field _panel:TGadget
 	Field _bitmapFont:TBitmapFont
+	Field _name:String
 	
 	Method SetSize( width:Int,height:Int )
 	
@@ -190,6 +194,18 @@ Type TFontTab Extends TGadgetObject
 		Return _bitmapFont.GetBlockCount()
 	
 	End Method
+	
+	Method Save( path:String )
+	
+		_bitmapFont.Save( _name,path )
+	
+	End Method
+	
+	Method SaveAs( name:String,path:String )
+	
+		_bitmapFont.Save( name,path )
+	
+	End Method
 
 	Function Create:TFontTab( tabber:TTabber,Text:String,font:TImageFont,texw:Int=256,texh:Int=256,range:TList=Null )
 	
@@ -209,6 +225,7 @@ Type TFontTab Extends TGadgetObject
 		tab.SetColor 0,0,0
 		tab.SetPixmap pixmap,PANELPIXMAP_CENTER
 		
+		tab._name=Text
 		tabber.AddTab tab,Text
 		tabber.SelectTab tabber.GetTabCount()-1
 		
@@ -247,7 +264,7 @@ Type TFontTabber Extends TTabber
 	
 	Method GetCurrentTab:TFontTab()
 	
-		Return GetTab( SelectedItem() )
+		Return TFontTab( Super.GetCurrentTab() )
 	
 	End Method
 
@@ -262,6 +279,9 @@ Type TFontTabber Extends TTabber
 
 End Type
 
+'
+' TFontWindow
+'
 Type TFontWindow Extends TWindow
 
 	Field _tabber:TFontTabber
@@ -384,6 +404,27 @@ Type TFontWindow Extends TWindow
 		_bitmapLabel.SetText "Current bitmap: "+EventData()
 	
 	End Method
+	
+	Method OnFileSave()
+	
+		If Not _tabber.GetCurrentTab() Then Return
+		_tabber.GetCurrentTab().Save( "" )
+	
+	End Method
+	
+	Method OnFileSaveAs()
+	
+		If Not _tabber.GetCurrentTab() Then Return
+	
+		Local file:String=RequestFile( "Save Bitmap font","",True,"" )
+		If file="" Then Return
+		
+		Local name:String=StripAll( file )
+		Local path:String=ExtractDir( file )
+		
+		_tabber.GetCurrentTab().SaveAs( name,path )
+	
+	End Method
 
 	Method OnGadgetAction:Int( obj:TGadgetObject )
 	
@@ -424,6 +465,15 @@ Type TFontWindow Extends TWindow
 		
 		Case MENU_FILE_NEW
 			Notify "New"
+			
+		Case MENU_FILE_SAVE
+			OnFileSave
+			
+		Case MENU_FILE_SAVEAS
+			OnFileSaveAs
+			
+		Case MENU_FILE_CLOSETAB
+			_tabber.RemoveCurrentTab
 			
 		Case MENU_FILE_EXIT
 			_running=False
