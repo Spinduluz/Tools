@@ -584,17 +584,26 @@ Type TFontWindow Extends TWindow
 		
 		tmpPanel=CreatePanel( 5,140,tmpPanel.GetClientWidth()-10,215,tmpPanel,PANEL_GROUP,"Character range(s)" )
 		
+		' From / To character text fields
+		'
 		width=(tmpPanel.GetClientWidth()-60)/2
 		_fromCharacter=CreateTextField( 10,5,width,24,tmpPanel )
 		_toCharacter=CreateTextField( tmpPanel.GetClientWidth()-10-width,5,width,24,tmpPanel )
 		
 		CreateLabel "to",width+10,8,(tmpPanel.GetClientWidth()-10-width)-(width+10),24,tmpPanel,LABEL_CENTER
+		
+		' Range listbox
+		'
 		_rangeBox=CreateListBox( 10,35,tmpPanel.GetClientWidth()-20,tmpPanel.GetClientHeight()-40-30,tmpPanel )
 		
+		' Add / Remove range buttons
+		'
 		width=(tmpPanel.GetClientWidth()-40)/2
 		_buttonAddRange=CreateButton( "&Add",10,tmpPanel.GetClientHeight()-30,width,24,tmpPanel )
 		_buttonRemoveRange=CreateButton( "&Remove",tmpPanel.GetClientWidth()-10-width,tmpPanel.GetClientHeight()-30,width,24,tmpPanel )
 		
+		' Bitmap slider
+		'
 		_selectBitmap=CreateSlider( 5,435,_panel.GetClientWidth()-10,24,_panel,SLIDER_TRACKBAR|SLIDER_HORIZONTAL )
 		_selectBitmap.SetRange 0,0
 		
